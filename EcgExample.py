@@ -1,6 +1,5 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import mplcursors
+import plotly.graph_objects as go
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
@@ -17,50 +16,32 @@ def plot_ecg(csv_file):
         voltages = data
 
     print("Plotting ECG data...")
-    fig, ax = plt.subplots(figsize=(10, 6)) 
+    fig = go.Figure()
 
     for col in voltages.columns:
-        ax.plot(time, voltages[col], label=f'Lead {col}')
+        fig.add_trace(go.Scatter(x=time, y=voltages[col], mode='lines', name=f'Lead {col}'))
 
-    ax.set_xlabel('Time (ms)')
-    ax.set_ylabel('Voltage (mV)')
-    ax.set_title('Electrocardiogram (ECG)')
-
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-    ax.axhline(y=0, color='black', linewidth=1)
-
-    mplcursors.cursor(hover=True)
-
-    def zoom(event):
-        if event.button == 'up':
-            scale_factor = 0.9
-        elif event.button == 'down':
-            scale_factor = 1.1
-        else:
-            return
-
-        cur_xlim = ax.get_xlim()
-        cur_ylim = ax.get_ylim()
-
-        x_range = (cur_xlim[1] - cur_xlim[0]) * scale_factor
-        y_range = (cur_ylim[1] - cur_ylim[0]) * scale_factor
-
-        new_xlim = [cur_xlim[0] + (cur_xlim[1] - cur_xlim[0]) * (1 - scale_factor) / 2,
-                    cur_xlim[1] - (cur_xlim[1] - cur_xlim[0]) * (1 - scale_factor) / 2]
-        new_ylim = [cur_ylim[0] + (cur_ylim[1] - cur_ylim[0]) * (1 - scale_factor) / 2,
-                    cur_ylim[1] - (cur_ylim[1] - cur_ylim[0]) * (1 - scale_factor) / 2]
-
-        ax.set_xlim(new_xlim)
-        ax.set_ylim(new_ylim)
-        plt.draw()
-
-    fig.canvas.mpl_connect('scroll_event', zoom)
+    fig.update_layout(
+        title="Electrocardiogram (ECG)",
+        xaxis_title="Time (ms)",
+        yaxis_title="Voltage (mV)",
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1, label="1s", step="second", stepmode="backward"),
+                    dict(count=10, label="10s", step="second", stepmode="backward"),
+                    dict(count=30, label="30s", step="second", stepmode="backward"),
+                    dict(step="all")
+                ])
+            ),
+            rangeslider=dict(visible=True),
+            type="linear"
+        ),
+        yaxis=dict(fixedrange=False)
+    )
 
     print("Displaying the plot...")
-    plt.tight_layout()
-    plt.legend()
-    plt.show()
+    fig.show()
 
 def select_file():
     print("Opening file dialog...")
