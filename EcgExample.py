@@ -1,5 +1,6 @@
 import pandas as pd
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+from matplotlib.widgets import RangeSlider
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
@@ -16,39 +17,38 @@ def plot_ecg(csv_file):
         voltages = data
 
     print("Plotting ECG data...")
-    fig = go.Figure()
-
+    
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=0.25)
     for col in voltages.columns:
-        fig.add_trace(go.Scatter(x=time, y=voltages[col], mode='lines', name=f'Lead {col}'))
+        ax.plot(time, voltages[col], label=f'Lead {col}')
+    
+    ax.set_title("Electrocardiogram (ECG)")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("Voltage (mV)")
+    ax.legend()
 
-    fig.update_layout(
-        title="Electrocardiogram (ECG)",
-        xaxis_title="Time (ms)",
-        yaxis_title="Voltage (mV)",
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=1, label="1s", step="second", stepmode="backward"),
-                    dict(count=10, label="10s", step="second", stepmode="backward"),
-                    dict(count=30, label="30s", step="second", stepmode="backward"),
-                    dict(step="all")
-                ])
-            ),
-            rangeslider=dict(visible=True),
-            type="linear"
-        ),
-        yaxis=dict(fixedrange=False)
-    )
+    # Create double range slider
+    axcolor = 'lightgoldenrodyellow'
+    ax_slider = plt.axes([0.2, 0.1, 0.65, 0.03], facecolor=axcolor)
+    time_slider = RangeSlider(ax_slider, 'Time', time.min(), time.max(), valinit=(time.min(), time.max()))
+
+    # Update function for slider
+    def update(val):
+        ax.set_xlim([time_slider.val[0], time_slider.val[1]])
+        fig.canvas.draw_idle()
+
+    time_slider.on_changed(update)
 
     print("Displaying the plot...")
-    fig.show()
+    plt.show()
 
 def select_file():
     print("Opening file dialog...")
     root = Tk()
-    root.withdraw()  
+    root.withdraw()
     filename = askopenfilename(title="Select ECG CSV file", filetypes=[("CSV files", "*.csv")])
-    root.destroy() 
+    root.destroy()
     print(f"File selected: {filename}")
     return filename
 
