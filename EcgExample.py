@@ -40,6 +40,8 @@ def plot_ecg(csv_file):
         yaxis=dict(fixedrange=False)
     )
 
+    fig.update_layout(dragmode='zoom', hovermode='x')
+
     print("Displaying the plot...")
     fig.show()
 
