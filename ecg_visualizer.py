@@ -3,16 +3,22 @@ import plotly.graph_objects as go
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
+def is_time_series(series):
+    return series.diff().dropna().gt(0).all()
+
 def plot_ecg(csv_file):
     print("Loading CSV file...")
     data = pd.read_csv(csv_file, header=None)
     print("CSV file loaded successfully.")
 
-    if data.shape[1] > 1 and data[0].dtype in [float, int]:
+    if data.shape[0] < data.shape[1]:
+        data = data.T  
+
+    if data.shape[1] > 1 and is_time_series(data[0]):
         time = data[0]
         voltages = data.iloc[:, 1:]
     else:
-        time = pd.Series(range(len(data))) / 1000.0
+        time = pd.Series(range(len(data))) * 1000.0 / len(data)  
         voltages = data
 
     print("Plotting ECG data...")

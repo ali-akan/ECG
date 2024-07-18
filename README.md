@@ -16,9 +16,11 @@ This Python script enables interactive visualization of ECG data from CSV files 
 4.  **Interacting with the Plot**    
     -   Use your mouse to zoom in on specific time ranges by dragging a box.
     -   Use the buttons above the plot to adjust the zoom level or reset to view the entire plot.
+    - Selected lines can be displayed individually or together.
 #### Supported Data Formats
 -   Single column (Time vs. Voltage)
 -   Multiple columns (Time vs. Multiple Voltages)
+- Handles data where each row represents a time point and columns represent voltage leads by checking and transposing the data if necessary.
 #### Troubleshooting Tips
 -   Ensure your CSV file contains numeric time and voltage data.
 -   Double-check file path and CSV format if the plot doesn't appear.
@@ -33,7 +35,7 @@ This script provides a user-friendly way to visualize and analyze ECG data direc
 
 ### Elektrokardiyogram (EKG) Veri Görselleştirme 
 #### Genel Bakış
-Bu Python script'i, Plotly kullanarak CSV dosyalarından EKG verilerini interaktif olarak görselleştirmenizi sağlar.
+Bu Python script'i, CSV dosyalarından alınan EKG verilerini Plotly kullanarak etkileşimli olarak görselleştirmenizi sağlar.
 #### Kurulum
 1.  **Gereksinimler**
     -   Sisteminizde Python'un yüklü olduğundan emin olun.
@@ -43,17 +45,19 @@ Bu Python script'i, Plotly kullanarak CSV dosyalarından EKG verilerini interakt
 1.  **Script'i Çalıştırma**
     -   `ecg_visualizer.py` dosyasını Python ortamınızda çalıştırarak script'i başlatın.
 2.  **Veri Seçimi**
-    -   Dosya iletişim kutusu açılacak ve EKG verilerini içeren CSV dosyasını seçebileceksiniz.
-3.  **Grafik Anlaması**
-    -   Grafikte x-ekseninde zaman (ms) ve y-ekseninde gerilim (mV) değerleri görüntülenir.
+    -   EKG verilerinizin bulunduğu CSV dosyasını seçmek için bir dosya iletişim kutusu açılacaktır.
+3.  **Grafik Anlama**
+    -   Grafik, x-ekseninde zaman (ms) ve y-ekseninde voltaj (mV) olarak gösterilir.
 4.  **Grafik İle Etkileşim**
     -   Belirli zaman aralıklarını yakınlaşmak için fareyi kullanın.
     -   Grafik üzerindeki düğmelerle zoom seviyesini ayarlayabilir veya tam görünümü görebilirsiniz.
+    - Seçilen çizgiler tek tek veya birlikte görüntülenebilir.
+
 #### Desteklenen Veri Formatları
--   Tek sütunlu (Zaman vs. Voltage)
--   Çoklu sütunlu (Zaman vs. Multiple Voltages)
+-   Tek sütunlu (Zaman vs. Voltaj)
+-   Çoklu sütunlu (Zaman vs. Çeşitli Voltajlar)
 #### Sorun Giderme İpuçları
--   CSV dosyanızın zaman ve gerilim verilerini içerdiğinden emin olun.
+-   CSV dosyanızın zaman ve voltaj  verilerini içerdiğinden emin olun.
 -   Grafik görünmezse, dosya yolunu ve CSV formatını kontrol edin.
 #### Kullanım Örneği
 ``1. Python ortamınızda `ecg_visualizer.py` dosyasını çalıştırın.
