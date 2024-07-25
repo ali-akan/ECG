@@ -41,15 +41,64 @@ def plot_ecg(csv_file):
                 ])
             ),
             rangeslider=dict(visible=True),
-            type="linear"
+            type="linear",
+            title=dict(
+                text="Time (ms)",
+                font=dict(
+                    family="Arial, sans-serif",
+                    size=18,
+                    color="RebeccaPurple"
+                )
+            ),
+            tickfont=dict(
+                family="Arial, sans-serif",
+                size=14,
+                color="RebeccaPurple"
+            ),
+            showline=True,
+            linewidth=2,
+            linecolor="RebeccaPurple"
         ),
-        yaxis=dict(fixedrange=False)
+        yaxis=dict(
+            title=dict(
+                text="Voltage (mV)",
+                font=dict(
+                    family="Arial, sans-serif",
+                    size=18,
+                    color="Black"
+                )
+            ),
+            tickfont=dict(
+                family="Arial, sans-serif",
+                size=14,
+                color="Black"
+            ),
+            fixedrange=False,
+            showline=True,
+            linewidth=2,
+            linecolor="Black"
+        ),
+        margin=dict(l=40, r=40, t=50, b=40),
+        dragmode='zoom',
+        hovermode='x',
     )
 
-    fig.update_layout(dragmode='zoom', hovermode='x')
+    fig.update_xaxes(
+        rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1s", step="second", stepmode="backward"),
+                dict(count=10, label="10s", step="second", stepmode="backward"),
+                dict(count=30, label="30s", step="second", stepmode="backward"),
+                dict(step="all")
+            ])
+        ),
+        type="linear"
+    )
 
     print("Displaying the plot...")
-    fig.show()
+    config = dict({'scrollZoom': True})
+    fig.show(config=config)
 
 def select_file():
     print("Opening file dialog...")
