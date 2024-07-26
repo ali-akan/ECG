@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
@@ -18,94 +19,85 @@ def plot_ecg(csv_file):
         time = data[0]
         voltages = data.iloc[:, 1:]
     else:
-        time = pd.Series(range(len(data))) * 1000.0 / len(data)  
+        time = pd.Series(range(len(data))) * 1000.0 / len(data)
         voltages = data
 
-    print("Plotting ECG data...")
-    fig = go.Figure()
+    num_leads = voltages.shape[1]
+    max_leads_per_fig = 10
+    num_figures = (num_leads + max_leads_per_fig - 1) // max_leads_per_fig
 
-    for col in voltages.columns:
-        fig.add_trace(go.Scatter(x=time, y=voltages[col], mode='lines', name=f'Lead {col}'))
+    for fig_num in range(num_figures):
+        start_index = fig_num * max_leads_per_fig
+        end_index = min(start_index + max_leads_per_fig, num_leads)
+        num_rows = end_index - start_index
 
-    fig.update_layout(
-        title="Electrocardiogram (ECG)",
-        xaxis_title="Time (ms)",
-        yaxis_title="Voltage (mV)",
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=1, label="1s", step="second", stepmode="backward"),
-                    dict(count=10, label="10s", step="second", stepmode="backward"),
-                    dict(count=30, label="30s", step="second", stepmode="backward"),
-                    dict(step="all")
-                ])
-            ),
-            rangeslider=dict(visible=True),
-            type="linear",
-            title=dict(
-                text="Time (ms)",
-                font=dict(
-                    family="Arial, sans-serif",
-                    size=18,
-                    color="RebeccaPurple"
-                )
-            ),
-            tickfont=dict(
-                family="Arial, sans-serif",
-                size=14,
-                color="RebeccaPurple"
-            ),
-            showline=True,
-            linewidth=2,
-            linecolor="RebeccaPurple"
-        ),
-        yaxis=dict(
-            title=dict(
-                text="Voltage (mV)",
-                font=dict(
-                    family="Arial, sans-serif",
-                    size=18,
-                    color="Black"
-                )
-            ),
-            tickfont=dict(
-                family="Arial, sans-serif",
-                size=14,
-                color="Black"
-            ),
-            fixedrange=False,
-            showline=True,
-            linewidth=2,
-            linecolor="Black"
-        ),
-        margin=dict(l=40, r=40, t=50, b=40),
-        dragmode='zoom',
-        hovermode='x',
-    )
+        # Calculate height dynamically based on the number of subplots
+        subplot_height = 300  # Reduced subplot height for better fitting
+        total_height = num_rows * subplot_height + 100  # Added buffer space for sliders
 
-    fig.update_xaxes(
-        rangeslider_visible=True,
-        rangeselector=dict(
-            buttons=list([
-                dict(count=1, label="1s", step="second", stepmode="backward"),
-                dict(count=10, label="10s", step="second", stepmode="backward"),
-                dict(count=30, label="30s", step="second", stepmode="backward"),
-                dict(step="all")
-            ])
-        ),
-        type="linear"
-    )
+        # Create the subplot figure
+        fig = make_subplots(
+            rows=num_rows,
+            cols=1,
+            shared_xaxes=False,  # Disable shared x-axes
+            vertical_spacing=0.05,
+            subplot_titles=[f'Lead {i}' for i in range(start_index, end_index)]
+        )
 
-    print("Displaying the plot...")
-    config = dict({'scrollZoom': True})
-    fig.show(config=config)
+        for i in range(start_index, end_index):
+            fig.add_trace(
+                go.Scatter(x=time, y=voltages.iloc[:, i], mode='lines', name=f'Lead {i}'),
+                row=i - start_index + 1, col=1
+            )
+
+            fig.update_xaxes(
+                title_text="Time (ms)",
+                row=i - start_index + 1, col=1,
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=1, label="1s", step="second", stepmode="backward"),
+                        dict(count=10, label="10s", step="second", stepmode="backward"),
+                        dict(count=30, label="30s", step="second", stepmode="backward"),
+                        dict(step="all")
+                    ])
+                ),
+                rangeslider=dict(
+                    visible=True,
+                    thickness=0.05
+                ),
+                type="linear"
+            )
+
+            fig.update_yaxes(
+                title_text="Voltage (mV)",
+                row=i - start_index + 1, col=1,
+                fixedrange=False,
+                showline=True,
+                linewidth=2,
+                linecolor="Black"
+            )
+
+        # Update layout
+        fig.update_layout(
+            title=f"Electrocardiogram (ECG) - Part {fig_num + 1}",
+            height=total_height,
+            width=1400,
+            margin=dict(l=60, r=60, t=60, b=60),
+            dragmode='zoom',
+            hovermode='x'
+        )
+
+        # Display figure
+        print(f"Displaying figure {fig_num + 1}...")
+        config = dict({'scrollZoom': True})
+        fig.show(config=config)
 
 def select_file():
     print("Opening file dialog...")
     root = Tk()
-    root.withdraw()  
+    root.withdraw()
     filename = askopenfilename(title="Select ECG CSV file", filetypes=[("CSV files", "*.csv")])
-    root.destroy() 
+    root.destroy()
     print(f"File selected: {filename}")
     return filename
 
