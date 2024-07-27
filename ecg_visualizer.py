@@ -23,36 +23,31 @@ def plot_ecg(csv_file):
         voltages = data
 
     num_leads = voltages.shape[1]
-    max_leads_per_fig = 10
+    max_leads_per_fig = 3  # Number of leads per figure
     num_figures = (num_leads + max_leads_per_fig - 1) // max_leads_per_fig
 
     for fig_num in range(num_figures):
         start_index = fig_num * max_leads_per_fig
         end_index = min(start_index + max_leads_per_fig, num_leads)
-        num_rows = end_index - start_index
+        num_rows = (end_index - start_index) * 2  # Two rows per lead (plot + spacing)
 
-        # Calculate height dynamically based on the number of subplots
-        subplot_height = 300  # Reduced subplot height for better fitting
-        total_height = num_rows * subplot_height + 100  # Added buffer space for sliders
-
-        # Create the subplot figure
         fig = make_subplots(
             rows=num_rows,
             cols=1,
-            shared_xaxes=False,  # Disable shared x-axes
-            vertical_spacing=0.05,
+            shared_xaxes=False,  # No sharing of x-axes
+            vertical_spacing=0.015,  # Reduced vertical spacing
             subplot_titles=[f'Lead {i}' for i in range(start_index, end_index)]
         )
 
         for i in range(start_index, end_index):
             fig.add_trace(
                 go.Scatter(x=time, y=voltages.iloc[:, i], mode='lines', name=f'Lead {i}'),
-                row=i - start_index + 1, col=1
+                row=2 * (i - start_index) + 1, col=1
             )
 
             fig.update_xaxes(
                 title_text="Time (ms)",
-                row=i - start_index + 1, col=1,
+                row=2 * (i - start_index) + 1, col=1,
                 rangeselector=dict(
                     buttons=list([
                         dict(count=1, label="1s", step="second", stepmode="backward"),
@@ -63,26 +58,31 @@ def plot_ecg(csv_file):
                 ),
                 rangeslider=dict(
                     visible=True,
-                    thickness=0.05
+                    thickness=0.1  # Increased thickness of the slider for higher visibility
                 ),
                 type="linear"
             )
 
             fig.update_yaxes(
-                title_text="Voltage (mV)",
-                row=i - start_index + 1, col=1,
+                title_text=f"Lead {i}",
+                row=2 * (i - start_index) + 1, col=1,
                 fixedrange=False,
                 showline=True,
                 linewidth=2,
                 linecolor="Black"
             )
 
-        # Update layout
+        fig.update_xaxes(range=[time.min(), time.max()])
+
+        # Dynamically adjust height and width
+        fig_height = num_rows * 250  # Adjusted height per row
+        fig_width = 1400  # Adjusted width
+
         fig.update_layout(
             title=f"Electrocardiogram (ECG) - Part {fig_num + 1}",
-            height=total_height,
-            width=1400,
-            margin=dict(l=60, r=60, t=60, b=60),
+            height=fig_height,  # Adjusted height
+            width=fig_width,  # Adjusted width
+            margin=dict(l=40, r=40, t=40, b=100),  # Reduced bottom margin for sliders
             dragmode='zoom',
             hovermode='x'
         )
