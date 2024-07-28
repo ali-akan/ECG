@@ -23,19 +23,19 @@ def plot_ecg(csv_file):
         voltages = data
 
     num_leads = voltages.shape[1]
-    max_leads_per_fig = 3  # Number of leads per figure
+    max_leads_per_fig = 3  
     num_figures = (num_leads + max_leads_per_fig - 1) // max_leads_per_fig
 
     for fig_num in range(num_figures):
         start_index = fig_num * max_leads_per_fig
         end_index = min(start_index + max_leads_per_fig, num_leads)
-        num_rows = (end_index - start_index) * 2  # Two rows per lead (plot + spacing)
+        num_rows = (end_index - start_index) * 2 
 
         fig = make_subplots(
             rows=num_rows,
             cols=1,
-            shared_xaxes=False,  # No sharing of x-axes
-            vertical_spacing=0.015,  # Reduced vertical spacing
+            shared_xaxes=False, 
+            vertical_spacing=0.015,
             subplot_titles=[f'Lead {i}' for i in range(start_index, end_index)]
         )
 
@@ -58,7 +58,7 @@ def plot_ecg(csv_file):
                 ),
                 rangeslider=dict(
                     visible=True,
-                    thickness=0.1  # Increased thickness of the slider for higher visibility
+                    thickness=0.1  
                 ),
                 type="linear"
             )
@@ -74,20 +74,18 @@ def plot_ecg(csv_file):
 
         fig.update_xaxes(range=[time.min(), time.max()])
 
-        # Dynamically adjust height and width
-        fig_height = num_rows * 250  # Adjusted height per row
-        fig_width = 1400  # Adjusted width
+        fig_height = num_rows * 250  
+        fig_width = 1400  
 
         fig.update_layout(
             title=f"Electrocardiogram (ECG) - Part {fig_num + 1}",
-            height=fig_height,  # Adjusted height
-            width=fig_width,  # Adjusted width
-            margin=dict(l=40, r=40, t=40, b=100),  # Reduced bottom margin for sliders
+            height=fig_height,  
+            width=fig_width,  
+            margin=dict(l=40, r=40, t=40, b=100),  
             dragmode='zoom',
             hovermode='x'
         )
 
-        # Display figure
         print(f"Displaying figure {fig_num + 1}...")
         config = dict({'scrollZoom': True})
         fig.show(config=config)
