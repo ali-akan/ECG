@@ -23,72 +23,93 @@ def plot_ecg(csv_file):
         voltages = data
 
     num_leads = voltages.shape[1]
-    max_leads_per_fig = 3  
-    num_figures = (num_leads + max_leads_per_fig - 1) // max_leads_per_fig
 
-    for fig_num in range(num_figures):
-        start_index = fig_num * max_leads_per_fig
-        end_index = min(start_index + max_leads_per_fig, num_leads)
-        num_rows = (end_index - start_index) * 2 
+    # Create a single figure for all leads
+    fig = make_subplots(
+        rows=num_leads, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.03,
+        subplot_titles=[f'Lead {i}' for i in range(num_leads)]
+    )
 
-        fig = make_subplots(
-            rows=num_rows,
-            cols=1,
-            shared_xaxes=False, 
-            vertical_spacing=0.015,
-            subplot_titles=[f'Lead {i}' for i in range(start_index, end_index)]
+    # Add traces for all leads
+    for i in range(num_leads):
+        fig.add_trace(
+            go.Scatter(x=time, y=voltages.iloc[:, i], mode='lines', name=f'Lead {i}'),
+            row=i+1, col=1
         )
 
-        for i in range(start_index, end_index):
-            fig.add_trace(
-                go.Scatter(x=time, y=voltages.iloc[:, i], mode='lines', name=f'Lead {i}'),
-                row=2 * (i - start_index) + 1, col=1
-            )
-
-            fig.update_xaxes(
-                title_text="Time (ms)",
-                row=2 * (i - start_index) + 1, col=1,
-                rangeselector=dict(
-                    buttons=list([
-                        dict(count=1, label="1s", step="second", stepmode="backward"),
-                        dict(count=10, label="10s", step="second", stepmode="backward"),
-                        dict(count=30, label="30s", step="second", stepmode="backward"),
-                        dict(step="all")
-                    ])
-                ),
-                rangeslider=dict(
-                    visible=True,
-                    thickness=0.1  
-                ),
-                type="linear"
-            )
-
-            fig.update_yaxes(
-                title_text=f"Lead {i}",
-                row=2 * (i - start_index) + 1, col=1,
-                fixedrange=False,
-                showline=True,
-                linewidth=2,
-                linecolor="Black"
-            )
-
-        fig.update_xaxes(range=[time.min(), time.max()])
-
-        fig_height = num_rows * 250  
-        fig_width = 1400  
-
-        fig.update_layout(
-            title=f"Electrocardiogram (ECG) - Part {fig_num + 1}",
-            height=fig_height,  
-            width=fig_width,  
-            margin=dict(l=40, r=40, t=40, b=100),  
-            dragmode='zoom',
-            hovermode='x'
+        fig.update_yaxes(
+            title_text=f"Lead {i}",
+            row=i+1, col=1,
+            fixedrange=False,
+            showline=True,
+            linewidth=2,
+            linecolor="Black"
         )
 
-        print(f"Displaying figure {fig_num + 1}...")
-        config = dict({'scrollZoom': True})
-        fig.show(config=config)
+    # Define dropdown buttons for each lead
+    buttons = [
+        {
+            'args': [{'visible': [i == j for j in range(num_leads)]},
+                     {'height': 1000, 'width': 1200}],  # Larger size for selected lead
+            'label': f'Show Lead {i}',
+            'method': 'update'
+        }
+        for i in range(num_leads)
+    ]
+    
+    # Add 'Show All' button
+    buttons.insert(0, {
+        'args': [{'visible': [True] * num_leads},
+                 {'height': 250 * num_leads, 'width': 1200}],  # Default size for all leads
+        'label': 'Show All',
+        'method': 'update'
+    })
+
+    # Update layout with dropdown menu
+    fig.update_layout(
+        title="Electrocardiogram (ECG)",
+        height=600,  # Keep height constant
+        width=1200,  # Adjusted width
+        margin=dict(l=40, r=40, t=40, b=100),
+        dragmode='zoom',
+        updatemenus=[
+            {
+                'buttons': buttons,
+                'direction': 'down',
+                'showactive': True,
+                'x': 0.9,  # Position of dropdown menu to the right side
+                'xanchor': 'right',
+                'y': 1.1,
+                'yanchor': 'top'
+            }
+        ],
+        hovermode='x unified'
+    )
+
+    fig.update_xaxes(
+        title_text="Time (ms)",
+        rangeslider=dict(
+            visible=True,
+            thickness=0.1,
+            bgcolor='rgba(255,255,255,0.9)'
+        ),
+        row=num_leads, col=1
+    )
+
+    fig.update_traces(
+        hoverinfo="x+y",
+        selector=dict(mode='lines')
+    )
+
+    # Remove unwanted annotations
+    fig.update_layout(
+        annotations=[]
+    )
+
+    print("Displaying the figure...")
+    fig.show(config={'scrollZoom': True})  # Enable scroll zoom
 
 def select_file():
     print("Opening file dialog...")
