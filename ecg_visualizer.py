@@ -24,12 +24,11 @@ def plot_ecg(csv_file):
 
     num_leads = voltages.shape[1]
 
-    # Create a single figure for all leads
+    # Create a subplot figure with stacked plots
     fig = make_subplots(
         rows=num_leads, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.03,
-        subplot_titles=[f'Lead {i}' for i in range(num_leads)]
+        vertical_spacing=0.03
     )
 
     # Add traces for all leads
@@ -48,55 +47,77 @@ def plot_ecg(csv_file):
             linecolor="Black"
         )
 
-    # Define dropdown buttons for each lead
-    buttons = [
-        {
-            'args': [{'visible': [i == j for j in range(num_leads)]},
-                     {'height': 1000, 'width': 1200}],  # Larger size for selected lead
-            'label': f'Show Lead {i}',
-            'method': 'update'
+    # Create buttons for focusing on each channel
+    buttons = []
+    for i in range(num_leads):
+        button = {
+            'label': f'Lead {i}',
+            'method': 'update',
+            'args': [
+                {'visible': [j == i for j in range(num_leads)]},
+                {'height': [600 if j == i else 150 for j in range(num_leads)]}
+            ]
         }
-        for i in range(num_leads)
-    ]
-    
-    # Add 'Show All' button
-    buttons.insert(0, {
-        'args': [{'visible': [True] * num_leads},
-                 {'height': 250 * num_leads, 'width': 1200}],  # Default size for all leads
+        buttons.append(button)
+
+    # Add reset button to show all channels
+    buttons.append({
         'label': 'Show All',
-        'method': 'update'
+        'method': 'update',
+        'args': [
+            {'visible': [True] * num_leads},
+            {'height': [600] * num_leads}
+        ]
     })
 
-    # Update layout with dropdown menu
+    # Update layout
     fig.update_layout(
         title="Electrocardiogram (ECG)",
-        height=600,  # Keep height constant
-        width=1200,  # Adjusted width
-        margin=dict(l=40, r=40, t=40, b=100),
+        height=600,  # Default height
+        width=1400,  # Adjusted width
+        margin=dict(l=40, r=40, t=40, b=0),
         dragmode='zoom',
+        hovermode='x unified',
         updatemenus=[
             {
                 'buttons': buttons,
                 'direction': 'down',
                 'showactive': True,
-                'x': 0.9,  # Position of dropdown menu to the right side
-                'xanchor': 'right',
-                'y': 1.1,
+                'x': 1.01,
+                'xanchor': 'left',
+                'y': 0.66,
                 'yanchor': 'top'
             }
-        ],
-        hovermode='x unified'
+        ]
     )
+
+    # Debugging: Print button configurations
+    # print("Buttons configuration:")
+    # for button in buttons:
+    #     print(button)
 
     fig.update_xaxes(
         title_text="Time (ms)",
         rangeslider=dict(
             visible=True,
             thickness=0.1,
-            bgcolor='rgba(255,255,255,0.9)'
+            # bgcolor='rgba(0,0,255,0.9)'  # Make slider background white
         ),
         row=num_leads, col=1
     )
+
+    # Update X-axes for each subplot
+    for i in range(num_leads):
+        if i == num_leads - 1:
+            fig.update_xaxes(
+                showticklabels=True,  # Show X-axis labels on the last subplot
+                row=i+1, col=1
+            )
+        else:
+            fig.update_xaxes(
+                showticklabels=False,  # Hide X-axis labels on other subplots
+                row=i+1, col=1
+            )
 
     fig.update_traces(
         hoverinfo="x+y",
@@ -127,3 +148,4 @@ if __name__ == "__main__":
         plot_ecg(csv_file)
     else:
         print("No file selected")
+    
