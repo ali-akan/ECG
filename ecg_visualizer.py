@@ -1,151 +1,158 @@
-import pandas as pd
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
+import pandas as pd
+import io
+import base64
 from plotly.subplots import make_subplots
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+import webbrowser
+from threading import Timer
 
-def is_time_series(series):
-    return series.diff().dropna().gt(0).all()
+app = dash.Dash(__name__)
 
-def plot_ecg(csv_file):
-    print("Loading CSV file...")
-    data = pd.read_csv(csv_file, header=None)
-    print("CSV file loaded successfully.")
+# Define a set of colors for the traces
+colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-    if data.shape[0] < data.shape[1]:
-        data = data.T  
-
-    if data.shape[1] > 1 and is_time_series(data[0]):
-        time = data[0]
-        voltages = data.iloc[:, 1:]
-    else:
-        time = pd.Series(range(len(data))) * 1000.0 / len(data)
-        voltages = data
-
-    num_leads = voltages.shape[1]
-
-    # Create a subplot figure with stacked plots
-    fig = make_subplots(
-        rows=num_leads, cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.03
-    )
-
-    # Add traces for all leads
-    for i in range(num_leads):
-        fig.add_trace(
-            go.Scatter(x=time, y=voltages.iloc[:, i], mode='lines', name=f'Lead {i}'),
-            row=i+1, col=1
-        )
-
-        fig.update_yaxes(
-            title_text=f"Lead {i}",
-            row=i+1, col=1,
-            fixedrange=False,
-            showline=True,
-            linewidth=2,
-            linecolor="Black"
-        )
-
-    # Create buttons for focusing on each channel
-    buttons = []
-    for i in range(num_leads):
-        button = {
-            'label': f'Lead {i}',
-            'method': 'update',
-            'args': [
-                {'visible': [j == i for j in range(num_leads)]},
-                {'height': [600 if j == i else 150 for j in range(num_leads)]}
-            ]
-        }
-        buttons.append(button)
-
-    # Add reset button to show all channels
-    buttons.append({
-        'label': 'Show All',
-        'method': 'update',
-        'args': [
-            {'visible': [True] * num_leads},
-            {'height': [600] * num_leads}
-        ]
-    })
-
-    # Update layout
-    fig.update_layout(
-        title="Electrocardiogram (ECG)",
-        height=600,  # Default height
-        width=1400,  # Adjusted width
-        margin=dict(l=40, r=40, t=40, b=0),
-        dragmode='zoom',
-        hovermode='x unified',
-        updatemenus=[
-            {
-                'buttons': buttons,
-                'direction': 'down',
-                'showactive': True,
-                'x': 1.01,
-                'xanchor': 'left',
-                'y': 0.66,
-                'yanchor': 'top'
-            }
-        ]
-    )
-
-    # Debugging: Print button configurations
-    # print("Buttons configuration:")
-    # for button in buttons:
-    #     print(button)
-
-    fig.update_xaxes(
-        title_text="Time (ms)",
-        rangeslider=dict(
-            visible=True,
-            thickness=0.1,
-            # bgcolor='rgba(0,0,255,0.9)'  # Make slider background white
+app.layout = html.Div([
+    html.Div(id='header-container', children=[
+        html.H2("ECG Data Visualization Program", style={'text-align': 'center', 'color': '#333', 'font-size': '24px', 'margin': '10px 0'}),
+        dcc.Upload(
+            id='upload-data',
+            children=html.Button('Open CSV File', style={'backgroundColor': '#007bff', 'color': 'white', 'border': 'none', 'padding': '8px 16px', 'cursor': 'pointer', 'font-size': '14px'}),
+            multiple=False,
+            style={'display': 'flex', 'justify-content': 'center', 'margin': '10px auto', 'width': 'fit-content', 'padding': '5px'}
         ),
-        row=num_leads, col=1
-    )
+        dcc.Dropdown(id='channel-dropdown', multi=True, style={'margin': '10px'})
+    ], style={'backgroundColor': '#f0f0f0', 'padding': '5px 0', 'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin-bottom': '10px'}),
 
-    # Update X-axes for each subplot
-    for i in range(num_leads):
-        if i == num_leads - 1:
-            fig.update_xaxes(
-                showticklabels=True,  # Show X-axis labels on the last subplot
-                row=i+1, col=1
-            )
-        else:
-            fig.update_xaxes(
-                showticklabels=False,  # Hide X-axis labels on other subplots
-                row=i+1, col=1
-            )
-
-    fig.update_traces(
-        hoverinfo="x+y",
-        selector=dict(mode='lines')
-    )
-
-    # Remove unwanted annotations
-    fig.update_layout(
-        annotations=[]
-    )
-
-    print("Displaying the figure...")
-    fig.show(config={'scrollZoom': True})  # Enable scroll zoom
-
-def select_file():
-    print("Opening file dialog...")
-    root = Tk()
-    root.withdraw()
-    filename = askopenfilename(title="Select ECG CSV file", filetypes=[("CSV files", "*.csv")])
-    root.destroy()
-    print(f"File selected: {filename}")
-    return filename
-
-if __name__ == "__main__":
-    print("Starting the script...")
-    csv_file = select_file()
-    if csv_file:
-        plot_ecg(csv_file)
-    else:
-        print("No file selected")
+    dcc.Graph(id='ecg-plot', config={'displayModeBar': True, 'scrollZoom': True}),
     
+    html.Div([
+        dcc.RangeSlider(
+            id='time-slider',
+            marks={i: f'{i:.2f}' for i in range(0, 101, 10)},
+            value=[0, 100],  # Default range
+            updatemode='drag',
+            included=True
+        )
+    ], style={
+        'position': 'fixed',
+        'bottom': '0',
+        'left': '0',
+        'width': '100%',
+        'backgroundColor': '#f0f0f0',
+        'padding': '5px',
+        'boxShadow': '0 -2px 5px rgba(0,0,0,0.1)'
+    }),
+    html.Div(id='slider-time-range', style={'text-align': 'center', 'padding': '5px', 'color': '#555'})
+], style={'height': '100vh', 'display': 'flex', 'flex-direction': 'column', 'justify-content': 'space-between', 'backgroundColor': '#f5f5f5'})
+
+@app.callback(
+    [Output('channel-dropdown', 'options'),
+     Output('channel-dropdown', 'value'),
+     Output('time-slider', 'min'),
+     Output('time-slider', 'max'),
+     Output('time-slider', 'value'),
+     Output('header-container', 'style')],
+    [Input('upload-data', 'contents')],
+    [State('upload-data', 'filename')]
+)
+def update_dropdown(contents, filename):
+    if contents is None:
+        return [], [], 0, 100, [0, 100], {'backgroundColor': '#f0f0f0', 'padding': '5px 0', 'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin-bottom': '10px'}
+    
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+    
+    # Check if the first column is time or index
+    try:
+        df[df.columns[0]] = pd.to_numeric(df[df.columns[0]], errors='coerce')
+        is_time = df[df.columns[0]].notna().all()
+    except Exception:
+        is_time = False
+
+    options = [{'label': f'Signal {i + 1}', 'value': col} for i, col in enumerate(df.columns[1:])]
+    
+    min_time = df[df.columns[0]].min()
+    max_time = df[df.columns[0]].max() if is_time else len(df) * 0.008
+    
+    header_style = {'backgroundColor': '#f0f0f0', 'padding': '2px 0', 'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin-bottom': '5px'} if contents else {'backgroundColor': '#f0f0f0', 'padding': '5px 0', 'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin-bottom': '10px'}
+    
+    return options, [col for col in df.columns[1:]], min_time, max_time, [min_time, max_time], header_style
+
+@app.callback(
+    [Output('ecg-plot', 'figure'),
+     Output('slider-time-range', 'children')],
+    [Input('channel-dropdown', 'value'),
+     Input('time-slider', 'value')],
+    [State('upload-data', 'contents')]
+)
+def update_graph(selected_channels, slider_range, contents):
+    if contents is None or not selected_channels:
+        return go.Figure(), 'Select a time range'
+    
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+    
+    is_time = pd.api.types.is_numeric_dtype(df[df.columns[0]])
+    
+    if is_time:
+        x_data = df[df.columns[0]]
+    else:
+        x_data = df.index * 0.008
+    
+    slider_min, slider_max = slider_range
+    
+    x_data_filtered = x_data[(x_data >= slider_min) & (x_data <= slider_max)]
+    df_filtered = df[(x_data >= slider_min) & (x_data <= slider_max)]
+    
+    fig = make_subplots(
+        rows=len(selected_channels),
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.02
+    )
+    
+    for i, (channel, color) in enumerate(zip(selected_channels, colors)):
+        fig.add_trace(go.Scatter(
+            x=x_data_filtered,
+            y=df_filtered[channel],
+            mode='lines',
+            name=f'Signal {i + 1}',
+            line=dict(color=color)
+        ), row=i + 1, col=1)
+    
+    fig.update_layout(
+        xaxis=dict(
+            title='Time',
+            range=[slider_range[0], slider_range[1]],  # Dynamically set x-axis range
+            showgrid=True,
+            zeroline=False,
+            gridcolor='lightgray'
+        ),
+        title='',
+        showlegend=True,
+        margin=dict(l=50, r=0, t=0, b=120),
+        height=400
+    )
+
+    for i in range(len(selected_channels)):
+        fig.update_yaxes(
+            title=f'S {i + 1}',
+            row=i + 1,
+            col=1,
+            gridcolor='lightgray'
+        )
+
+    return fig, f'Time range: {slider_range[0]:.2f} to {slider_range[1]:.2f} seconds'
+
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:8050/")
+
+if __name__ == '__main__':
+    if not app.run_server.__defaults__:
+        Timer(1, open_browser).start()
+    app.run_server()
