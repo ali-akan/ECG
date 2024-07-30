@@ -5,15 +5,18 @@ This Python script enables interactive visualization of ECG data from CSV files 
 1.  **Install Dependencies**
     -   Ensure you have Python installed on your system.
     -   Install the required Python libraries using pip:
-       `pip install pandas plotly`        
+       `pip install dash plotly pandas `        
 #### How to Use
 1.  **Running the Script**
     -   Execute the script by running `ecg_visualizer.py` in your Python environment.
 2.  **Selecting Your Data**
-    -   A file dialog will open to select your ECG data CSV file.
+    - The application interface will automatically launch in your default web browser. If it doesn't, navigate to http://127.0.0.1:8050/ manually.
+    -  Click the "Open CSV File" button and select your ECG data CSV file.
 3.  **Understanding the Plot**  
     -   The plot displays time (ms) on the x-axis and voltage (mV) on the y-axis.
+    -   Multiple channels of ECG data can be displayed simultaneously.
 4.  **Interacting with the Plot**    
+    -   Use the dropdown menu to select the specific channels you wish to display.
     -   Use your mouse to zoom in on specific time ranges by dragging a box.
     -   Use the buttons above the plot to adjust the zoom level or reset to view the entire plot.
     - Selected lines can be displayed individually or together.
@@ -40,15 +43,17 @@ Bu Python script'i, CSV dosyalarından alınan EKG verilerini Plotly kullanarak 
 1.  **Gereksinimler**
     -   Sisteminizde Python'un yüklü olduğundan emin olun.
     -   Gerekli Python kütüphanelerini pip aracılığıyla yükleyin:
-        `pip install pandas plotly`         
+        `pip install dash plotly pandas`         
 #### Nasıl Kullanılır
 1.  **Script'i Çalıştırma**
     -   `ecg_visualizer.py` dosyasını Python ortamınızda çalıştırarak script'i başlatın.
 2.  **Veri Seçimi**
-    -   EKG verilerinizin bulunduğu CSV dosyasını seçmek için bir dosya iletişim kutusu açılacaktır.
+    -   Uygulama arayüzü otomatik olarak varsayılan web tarayıcınızda açılacaktır. Açılmazsa, http://127.0.0.1:8050/ adresine manuel olarak gidin.
+    -"Open CSV File" butonuna tıklayarak EKG verilerinizin bulunduğu CSV dosyasını seçin.
 3.  **Grafik Anlama**
     -   Grafik, x-ekseninde zaman (ms) ve y-ekseninde voltaj (mV) olarak gösterilir.
 4.  **Grafik İle Etkileşim**
+    - Görüntülemek istediğiniz belirli kanalları seçmek için açılır menüyü kullanın.
     -   Belirli zaman aralıklarını yakınlaşmak için fareyi kullanın.
     -   Grafik üzerindeki düğmelerle zoom seviyesini ayarlayabilir veya tam görünümü görebilirsiniz.
     - Seçilen çizgiler tek tek veya birlikte görüntülenebilir.
