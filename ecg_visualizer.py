@@ -127,27 +127,51 @@ def update_graph(selected_channels, slider_range, contents):
     
     fig.update_layout(
         xaxis=dict(
-            title='Time',
+            title='',  # Remove x-axis title from individual subplots
+            title_standoff=20,
             range=[slider_range[0], slider_range[1]],  # Dynamically set x-axis range
+            showgrid=True,
+            zeroline=False,
+            gridcolor='lightgray'
+        ),
+        yaxis=dict(
+            title='',  # Remove y-axis title from individual subplots
+            title_standoff=50,
             showgrid=True,
             zeroline=False,
             gridcolor='lightgray'
         ),
         title='',
         showlegend=True,
-        margin=dict(l=50, r=0, t=0, b=120),
+        margin=dict(l=100, r=20, t=20, b=100),  # Adjust margins to accommodate axis titles
         height=400
     )
 
-    for i in range(len(selected_channels)):
-        fig.update_yaxes(
-            title=f'S {i + 1}',
-            row=i + 1,
-            col=1,
-            gridcolor='lightgray'
-        )
+    fig.update_yaxes(
+        title_text="",  # Remove default y-axis titles
+        showgrid=True,
+        zeroline=False,
+        gridcolor='lightgray'
+    )
 
-    return fig, f'Time range: {slider_range[0]:.2f} to {slider_range[1]:.2f} seconds'
+    # Add y-axis annotation
+    fig.add_annotation(
+        text="Voltage (mV)",
+        xref="paper", yref="paper",
+        x=-0.07, y=0.5,
+        showarrow=False,
+        textangle=-90,
+        font=dict(size=14)
+    )
+
+    # Adjust x-axis title to be at the bottom
+    fig.update_xaxes(
+        title_text="Time (ms)",
+        title_standoff=20,
+        row=len(selected_channels), col=1
+    )
+
+    return fig, f'Time range: {slider_range[0]:.2f} to {slider_range[1]:.2f} ms'
 
 def open_browser():
     webbrowser.open_new("http://127.0.0.1:8050/")
